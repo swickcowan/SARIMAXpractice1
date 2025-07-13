@@ -9,50 +9,23 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import plotly.graph_objects as go
 
 # -------------------------
-# Robust Google Drive downloader
+# Load model from Dropbox
 # -------------------------
-def download_file_from_google_drive(file_id, destination):
-    URL = "https://docs.google.com/uc?export=download"
-    session = requests.Session()
-
-    response = session.get(URL, params={'id': file_id}, stream=True)
-    token = get_confirm_token(response)
-
-    if token:
-        params = {'id': file_id, 'confirm': token}
-        response = session.get(URL, params=params, stream=True)
-
-    save_response_content(response, destination)
-
-def get_confirm_token(response):
-    for key, value in response.cookies.items():
-        if key.startswith('download_warning'):
-            return value
-    return None
-
-def save_response_content(response, destination):
-    CHUNK_SIZE = 32768
-
-    with open(destination, "wb") as f:
-        for chunk in response.iter_content(CHUNK_SIZE):
-            if chunk:
-                f.write(chunk)
-
-@st.cache_resource
-def load_model_from_google_drive(file_id, local_filename="sarima_model.pkl"):
+def download_from_dropbox(dropbox_url, local_filename="sarima_model.pkl"):
     if not os.path.exists(local_filename):
-        st.write("Downloading pre-trained model from Google Drive...")
-        download_file_from_google_drive(file_id, local_filename)
-        st.write("Model downloaded.")
-    else:
-        st.write("Using cached model.")
+        st.write("Downloading model from Dropbox...")
+        response = requests.get(dropbox_url)
+        if response.status_code == 200:
+            with open(local_filename, "wb") as f:
+                f.write(response.content)
+            st.success("Model downloaded successfully.")
+        else:
+            st.error("Failed to download model. Check your Dropbox URL.")
     return joblib.load(local_filename)
 
-# -------------------------
-# Replace with your actual Google Drive file ID here:
-google_drive_file_id = "11fmreFztoPmZCubd2SUIBFlqp6GXozIY"
-
-model_fit = load_model_from_google_drive(google_drive_file_id)
+# Replace this with your actual Dropbox direct download URL:
+dropbox_url = "https://www.dropbox.com/scl/fi/tg02yhekyb7hh9cmpf0za/sarima_model.pkl?rlkey=ujdtzt1gvu5fzrmumtxvzx37k&st=yucjmpq7&dl=1"
+model_fit = download_from_dropbox(dropbox_url)
 
 # -------------------------
 # Load data
@@ -199,3 +172,4 @@ st.markdown("""
 📞 <a href="tel:8563040922">(856) 304-0922</a>
 </div>
 """, unsafe_allow_html=True)
+
