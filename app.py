@@ -24,7 +24,7 @@ def load_model_from_url(url, local_filename="sarima_model.pkl"):
     return joblib.load(local_filename)
 
 # Replace with your actual file ID
-google_drive_url = "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID"
+google_drive_url = "https://drive.google.com/uc?export=download&id=11fmreFztoPmZCubd2SUIBFlqp6GXozIY"
 model_fit = load_model_from_url(google_drive_url)
 
 # -------------------------
