@@ -1,9 +1,8 @@
 streamlit
-statsmodels
-scikit-learn
-matplotlib
 pandas
 numpy
-scipy
+joblib
+requests
+statsmodels
+scikit-learn
 plotly
-Pillow
