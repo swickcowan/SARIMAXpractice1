@@ -2,30 +2,57 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import requests
 import os
+import requests
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import plotly.graph_objects as go
 
 # -------------------------
-# Load model from Google Drive
+# Robust Google Drive downloader
 # -------------------------
+def download_file_from_google_drive(file_id, destination):
+    URL = "https://docs.google.com/uc?export=download"
+    session = requests.Session()
+
+    response = session.get(URL, params={'id': file_id}, stream=True)
+    token = get_confirm_token(response)
+
+    if token:
+        params = {'id': file_id, 'confirm': token}
+        response = session.get(URL, params=params, stream=True)
+
+    save_response_content(response, destination)
+
+def get_confirm_token(response):
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            return value
+    return None
+
+def save_response_content(response, destination):
+    CHUNK_SIZE = 32768
+
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(CHUNK_SIZE):
+            if chunk:
+                f.write(chunk)
+
 @st.cache_resource
-def load_model_from_url(url, local_filename="sarima_model.pkl"):
+def load_model_from_google_drive(file_id, local_filename="sarima_model.pkl"):
     if not os.path.exists(local_filename):
-        st.write("Downloading pre-trained model...")
-        response = requests.get(url)
-        with open(local_filename, "wb") as f:
-            f.write(response.content)
+        st.write("Downloading pre-trained model from Google Drive...")
+        download_file_from_google_drive(file_id, local_filename)
         st.write("Model downloaded.")
     else:
         st.write("Using cached model.")
     return joblib.load(local_filename)
 
-# Replace with your actual file ID
-google_drive_url = "https://drive.google.com/uc?export=download&id=11fmreFztoPmZCubd2SUIBFlqp6GXozIY"
-model_fit = load_model_from_url(google_drive_url)
+# -------------------------
+# Replace with your actual Google Drive file ID here:
+google_drive_file_id = "11fmreFztoPmZCubd2SUIBFlqp6GXozIY"
+
+model_fit = load_model_from_google_drive(google_drive_file_id)
 
 # -------------------------
 # Load data
@@ -172,5 +199,3 @@ st.markdown("""
 📞 <a href="tel:8563040922">(856) 304-0922</a>
 </div>
 """, unsafe_allow_html=True)
-
-
